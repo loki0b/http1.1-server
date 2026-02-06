@@ -5,30 +5,35 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#define PORT 8080
+#define HOST "127.0.0.1"
+#define PORT 8081
 
 int main() {
-	int sockfd;
-	
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	int sockfd, clientfd;
+	pid_t pid;
+
+	if ((sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1)
 		perror("(socket)");
 	
+	// Address information
 	struct sockaddr_in addr = {
 		.sin_family = AF_INET,
 		.sin_port = htons(PORT),
 	};
-	
-	inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+	inet_pton(AF_INET, HOST, &addr.sin_addr);
 	
 	if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1)
 		perror("(bind)");
 
 	if (listen(sockfd, 10) == -1) //backlog
 		perror("(listen)");
-
-	if (accept(sockfd, NULL, NULL) == -1)
-		perror("(accept)");
-
+	
+	struct sockaddr_in client_addr;
+	socklen_t sock_client_size = sizeof(client_addr);
+	if ((clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &sock_client_size)) == -1)
+			perror("(accept)");
+	
+	close(clientfd);
 	close(sockfd);
 
 	return 0;
