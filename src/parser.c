@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #define DEL 0x7F
@@ -82,16 +83,30 @@ int CRLF(char* buffer, int buffer_size) {
 }
 
 int separate_token_request_line(char* buffer, int buffer_size, char** element) {
-    int i = 0;
-    while (i < buffer_size && buffer[i] != SP) i++;
-    char* token = (char*) malloc((sizeof(char) * i) + 1);
+    int offset = 0;
+
+    while (offset < buffer_size) {
+        if (offset < (buffer_size - 1) && buffer[offset] == CR && buffer[offset + 1] == LF) {
+            offset += 2;
+            break;
+        }
+
+        else if (buffer[offset] == SP) {
+            offset++;
+            break;
+        }
+
+        offset++;
+    }
+    
+    char* token = (char*) malloc((sizeof(char) * offset) + 1);
     //if (token == NULL) return NULL;
 
-    for (int j = 0; j < i + 1; j++) token[j] = buffer[j];
-    token[i + 1] = '\0';
+    for (int j = 0; j < offset; j++) token[j] = buffer[j];
+    token[offset] = '\0';
     *element = token;
 
-    return i + 1;
+    return offset;
 }
 
 struct request_line* parse_request_line(char* buffer, int buffer_size) {
@@ -101,9 +116,16 @@ struct request_line* parse_request_line(char* buffer, int buffer_size) {
     struct request_line* rl = (struct request_line*) malloc(sizeof(struct request_line));
     if (rl == NULL) return NULL;
 
-    int ret = separate_token_request_line(buffer, buffer_size, &rl->method);
-    ret = separate_token_request_line(&buffer[ret], buffer_size - ret, &rl->URI);
-    ret = separate_token_request_line(&buffer[ret], buffer_size - ret, &rl->version);
+    int offset = 0;
+    offset += separate_token_request_line(buffer, buffer_size, &rl->method);
+    offset += separate_token_request_line(&buffer[offset], buffer_size - offset, &rl->URI);
+    offset += separate_token_request_line(&buffer[offset], buffer_size - offset, &rl->version);
 
     return rl;
-} 
+}
+
+int main() {
+    struct request_line *rl = parse_request_line("GET / HTTP/1.1\r\n", 16);
+
+    printf("%s %s %s\n", rl->method, rl->URI, rl->version);
+}
