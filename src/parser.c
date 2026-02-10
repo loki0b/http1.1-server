@@ -41,19 +41,19 @@ int is_token_char(char byte) {
     return 0;
 }
 
-int LWS(char* line, int size, char** next_char_pointer) {
-    for (int i = 0; i < size - 2; i++) {
-        if (line[i] == CR && line[i + 1] == LF) {
-            if (line[i + 2] == SP || line[i + 2] == HT) {
-                while ((size - i > 0) && (line[i] == SP || line[i] == HT)) i++;
-                *next_char_pointer = &line[i];
-                // TODO: Otimizar consumo de memória reduzindo o tamanho da request removendo os SP e HT.
-
-                return 0;
-            }
-        }
-
-        *next_char_pointer = &line[i];
-        return 0;
-    }
+// TODO: Otimizar consumo de memória reduzindo o tamanho da request removendo os SP e HT.
+// Return a pointer to next char that is not LWS or SP/HT
+int LWS(char* byte, int size, char** next_char_pointer) {
+    int i = 0;
+    if ( i < (size - 2) && byte[i] == CR && byte[i + 1] == LF) {
+        if (byte[i + 2] == SP || byte[i + 2] == HT) i += 2;
+    
+        else return 0; // End of line
+    }   
+    
+    while ((i < size) && (byte[i] == SP || byte[i] == HT)) i++;
+    *next_char_pointer = &byte[i];
+    
+    if (i > 0) return 1; //LWS
+    else return 0;
 }
