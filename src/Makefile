@@ -1,2 +1,8 @@
+SRC=$(wildcard *.c)
+BIN='http1.1-server'
+
 all:
-	gcc -Wall main.c -o http1.1-server
+	gcc -Wall $(SRC) -o http1.1-server
+
+run:
+	./$(BIN)
