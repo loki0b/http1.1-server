@@ -5,6 +5,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#include "parser.h"
+
 #define HOST "127.0.0.1"
 #define PORT 8081
 
@@ -32,7 +34,13 @@ int main() {
 	socklen_t sock_client_size = sizeof(client_addr);
 	if ((clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &sock_client_size)) == -1)
 			perror("(accept)");
+
+	char req[16];
+	read(clientfd, req, 16);
 	
+	struct request_line* rl = parse_request_line(req, 16);
+	write(clientfd, rl->method, 3);
+
 	close(clientfd);
 	close(sockfd);
 

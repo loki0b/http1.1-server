@@ -1,17 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "parser.h"
+#include "data_structures.h"
+
 #define DEL 0x7F
 #define SP  0x20
 #define HT  0x09
 #define CR  0x0D
 #define LF  0x0A
-
-struct request_line {
-    char* method;
-    char* URI;
-    char* version;
-};
+#define HEADER_SEPARATOR 0x3A
 
 int is_CTL(char byte) {
     if ((byte - 31 <= 0) || (byte == DEL)) return 1;
@@ -124,8 +122,22 @@ struct request_line* parse_request_line(char* buffer, int buffer_size) {
     return rl;
 }
 
-int main() {
-    struct request_line *rl = parse_request_line("GET / HTTP/1.1\r\n", 16);
+// TODO: Test
+int parse_headers(char* buffer, int buffer_size, struct linked_list* headers) {
+    if (headers == NULL || buffer == NULL) return -1;
+    if (buffer_size <= 0) return 0;
 
-    printf("%s %s %s\n", rl->method, rl->URI, rl->version);
+    header_t* h;
+
+    h = (header_t*) malloc(sizeof(header_t));
+    if (h == NULL) return -1;
+
+    int i = 0;
+    while (i < buffer_size && buffer[i] != HEADER_SEPARATOR) i++;
+    char* field_name = (char*) malloc((sizeof(char) * i) + 1);
+    for (int j = 0; j < i; j++) field_name[j] = buffer[j];
+    field_name[i] = '\0';
+    h->field_name = field_name;
+
+    insert(headers, h);
 }
